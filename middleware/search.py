@@ -44,7 +44,7 @@ class SearchResult(BaseModel):
     description: str
     release_date: str
     run_time: int
-    cast: str
+    cast: List[str]
     director: str
 
 
@@ -92,6 +92,16 @@ def execute_search(word_counts: Counter) -> dict:
 
     return accumulator
 
+def pair_names_from_string(name_string: str) -> List[str]:
+    names = name_string.split()
+    paired_names = []
+    for i in range(0, len(names), 2):
+        if i + 1 < len(names):
+            first_name = names[i]
+            last_name = names[i+1]
+            paired_names.append(f"{first_name} {last_name}")
+    return paired_names
+
 def get_top_n(accumulator: dict, n: int = 5) -> List[SearchResult]:
     """
     Sorts doc scores and returns top-n as SearchResult objects.
@@ -123,7 +133,7 @@ def get_top_n(accumulator: dict, n: int = 5) -> List[SearchResult]:
             description=description,
             release_date=release_date,
             run_time=run_time,
-            cast=cast,
+            cast=pair_names_from_string(cast),
             director=directors,
         ))
     return results
