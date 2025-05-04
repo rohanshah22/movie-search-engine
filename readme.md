@@ -1,6 +1,13 @@
-Install FastAPI via 
+Dependencies:
+
+pip install fastapi uvicorn pandas nltk
 
 pip install fastapi uvicorn
 pip install fastapi[all]
-run script.py into backend
-uvicorn script:app --reload
+
+
+Running App:
+
+backend commands from /movie-search-engine
+cd middleware
+uvicorn search:app --reload
