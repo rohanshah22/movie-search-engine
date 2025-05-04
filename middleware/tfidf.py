@@ -19,10 +19,10 @@ b = 0.5
 data = None
 
 try:
-    with open("/content/inverted_index.json", "r") as f:
+    with open("inverted_index.json", "r") as f:
         data = json.load(f)
 except FileNotFoundError:
-    print("Error: The file '/content/inverted_index.json' was not found.")
+    print("Error: The file 'inverted_index.json' was not found.")
     data = None
 except json.JSONDecodeError:
     print("Error: Failed to decode JSON from the file.")
@@ -41,13 +41,10 @@ idf_matrix = None
 def create_idf_matrix():
 
   t_idf_matrix = {}
-  query_words = ["alice", "falls", "well", "Jabberwocky", "rabbit", "surreal", "world", "Tim", "Burton", "underland", "mad", "hatter"]
-  vocab.extend([ps.stem(word) for word in query_words])
 
-  for vocab_word in vocab:
-      if vocab_word in inverted_index:
-        k = len(inverted_index[vocab_word])
-        t_idf_matrix[vocab_word] = math.log((M + 1) / k)
+  for vocab_word in inverted_index:
+    k = len(inverted_index[vocab_word])
+    t_idf_matrix[vocab_word] = math.log((M + 1) / k)
 
   return t_idf_matrix
 
@@ -88,7 +85,6 @@ def execute_search(word_counts):
 def print_docs(query, relevence_docs):
     sorted_word_freqs = dict(sorted(relevence_docs.items(), key=lambda item: item[1], reverse=True))
     top_five = list(sorted_word_freqs.keys())[:5]
-    bottom_five = list(sorted_word_freqs.keys())[-5:][::-1]
 
     print(f"<---------- Relevant Document Results for Query: {query} ---------->")
     print()
@@ -98,10 +94,9 @@ def print_docs(query, relevence_docs):
        score = sorted_word_freqs[ind]
        title = dataset[1][i]
        doc = dataset[2][i]
-       print(f"Rank {c} Most Relevant Document ")
        print()
     #    print("Score: ", score, "Title:", title, "Document: ", doc)
-       print(f"Score: {score}, Title: {title}, Document: {doc}")
+       print(f"Score: {score}, Title: {title}")
        print()
        c += 1
 
@@ -110,24 +105,6 @@ def print_docs(query, relevence_docs):
     print()
 
     # prints out the lowest five documents that have at least a query word in the document (Was asked in Campus Wire Post #224)
-    print(f"<---------- Irrelevant Document Results for Query: {query} ---------->")
-    
-    print()
-    c = 1
-    for ind in bottom_five:
-       i = int(ind) - 1
-       score = sorted_word_freqs[ind]
-       title = dataset[1][i]
-       doc = dataset[2][i]
-       print(f"Rank {c} Most Irrelevant Document ")
-       print()
-       print(score, title, doc)
-       print()
-       c += 1
-
-    print ("<---------- End ---------->")
-    print()
-    print()
 
 # def print_specific():
 #     i = 105
@@ -138,13 +115,11 @@ def print_docs(query, relevence_docs):
 #       print(ps.stem(word))
 
 if __name__ == '__main__':
-   dataset = pd.read_csv("/content/train.csv",header=None)
-
-  #  print_specific()
+   dataset = pd.read_csv("train.csv",header=None)
 
    idf_matrix = create_idf_matrix()
 
-   queries = ["Tim Burton alice falls down well looking for rabbit, finds underland and mad hatter, Jabberwocky"]
+   queries = ["billionare named bruce wayne becomes batman superhero fights crime"]
 
    query_vectors = determine_query_vectors(queries)
 
