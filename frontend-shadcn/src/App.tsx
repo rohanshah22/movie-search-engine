@@ -17,7 +17,7 @@ function App() {
     <div>
       <div className="flex flex-row">
         <Input placeholder="Type your movie description here" />
-        <Button>shadcn button</Button>
+        <Button>search</Button>
       </div>
       <Table>
         <TableCaption>Movies</TableCaption>
@@ -27,6 +27,7 @@ function App() {
             <TableHead>Summary</TableHead>
             <TableHead>Director</TableHead>
             <TableHead>Cast</TableHead>
+            <TableHead>Related Movies</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -35,6 +36,7 @@ function App() {
             <TableCell>Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary</TableCell>
             <TableCell>Director, Director</TableCell>
             <TableCell>Cast, Cast, Cast, Cast, Cast</TableCell>
+            <TableCell>Movie, Movie, Movie, Movie, Movie</TableCell>
           </TableRow>
         </TableBody>
       </Table>
