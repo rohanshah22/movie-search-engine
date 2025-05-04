@@ -11,7 +11,7 @@ from nltk.stem import PorterStemmer
 
 # ----- CONFIGURATION & GLOBALS -----
 INVERTED_INDEX_PATH = "inverted_index.json"
-DATASET_PATH        = "train.csv"         # no header: [doc_id, title, description]
+DATASET_PATH        = "filtered_output.csv"
 K = 3.0
 b = 0.5
 
@@ -41,6 +41,11 @@ class SearchResult(BaseModel):
     doc_id: int
     title: str
     score: float
+    description: str
+    release_date: str
+    run_time: int
+    cast: str
+    director: str
 
 
 # ----- UTILITY FUNCTIONS -----
@@ -89,7 +94,16 @@ def execute_search(word_counts: Counter) -> dict:
 
 def get_top_n(accumulator: dict, n: int = 5) -> List[SearchResult]:
     """
-    Sorts doc scores and returns top‐n as SearchResult objects.
+    Sorts doc scores and returns top-n as SearchResult objects.
+    class SearchResult(BaseModel):
+    doc_id: int
+    title: str
+    score: float
+    description: str
+    release_date: str
+    run_time: int
+    cast: List[str]
+    director: List[str]
     """
     # sort by score desc
     ranked = sorted(accumulator.items(), key=lambda kv: kv[1], reverse=True)[:n]
@@ -97,10 +111,20 @@ def get_top_n(accumulator: dict, n: int = 5) -> List[SearchResult]:
     for doc_id_str, score in ranked:
         doc_idx = int(doc_id_str) - 1  # 0‐based index into the CSV
         title = dataset.iloc[doc_idx, 1]
+        description = dataset.iloc[doc_idx, 2]
+        release_date = dataset.iloc[doc_idx, 3]
+        run_time = dataset.iloc[doc_idx, 4]
+        cast = dataset.iloc[doc_idx, 5]
+        directors = dataset.iloc[doc_idx, 6]
         results.append(SearchResult(
             doc_id=int(doc_id_str),
             title=title,
-            score=score
+            score=score,
+            description=description,
+            release_date=release_date,
+            run_time=run_time,
+            cast=cast,
+            director=directors,
         ))
     return results
 
@@ -130,7 +154,7 @@ def load_data():
 
     # 3) Load dataset
     #    train.csv assumed to have: [doc_id, title, description], no header
-    dataset = pd.read_csv(DATASET_PATH, header=None, names=["doc_id", "title", "description"])
+    dataset = pd.read_csv(DATASET_PATH, header=None, names=["doc_id", "title", "description", "release_date", "runtime", "cast", "director"])
     if dataset.empty:
         raise RuntimeError(f"{DATASET_PATH} is empty or invalid")
 
