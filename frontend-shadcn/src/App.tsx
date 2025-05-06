@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import axios from "axios";
 import {
   Table,
   TableBody,
@@ -20,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import "./App.css";
 
@@ -99,6 +99,50 @@ function App() {
 
 
   const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
+  const [directorFilter, setDirectorFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [minRuntime, setMinRuntime] = useState<number | "">("");
+  const [maxRuntime, setMaxRuntime] = useState<number | "">("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useState("relevancy");
+
+  const toggleFilters = () => {
+    setFiltersCollapsed(!filtersCollapsed);
+  };
+  const filteredAndSortedResults = results
+    .filter((movie) => {
+      // Filter by director
+      const directorCheck =
+        directorFilter === "" ||
+        movie.director.toLowerCase().includes(directorFilter.toLowerCase());
+
+      // Existing runtime/date filters
+      const runtimeCheck =
+        (minRuntime === "" || movie.run_time >= minRuntime) &&
+        (maxRuntime === "" || movie.run_time <= maxRuntime);
+      const dateCheck =
+        (startDate === "" || movie.release_date >= startDate) &&
+        (endDate === "" || movie.release_date <= endDate);
+
+      return directorCheck && runtimeCheck && dateCheck;
+    })
+    .sort((a, b) => {
+      let valA, valB;
+      if (sortBy === "runtime") {
+        valA = a.run_time;
+        valB = b.run_time;
+      } else if (sortBy === "release_date") {
+        valA = new Date(a.release_date).getTime();
+        valB = new Date(b.release_date).getTime();
+      } else {
+        // "relevancy"
+        valA = a.score;
+        valB = b.score;
+      }
+      return sortOrder === "asc" ? valA - valB : valB - valA;
+    });
 
   const handleSearch = async () => {
     console.log(relatedData);
@@ -129,6 +173,10 @@ function App() {
 
   return (
     <div>
+          <h2 className="scroll-m-20 border-b pb-2 text-4xl font-semibold tracking-tight first:mt-0">
+      Mov Map
+        </h2>
+      
       <div className="flex flex-row mb-4">
         <Input
           placeholder="Type your movie description here"
@@ -136,7 +184,49 @@ function App() {
           onChange={(e) => setQuery(e.target.value)}
         />
         <Button onClick={handleSearch}>Search</Button>
+        <Button onClick={toggleFilters}>Filters</Button>
+
       </div>
+      {!filtersCollapsed && (
+        <div className="flex flex-row space-x-2 mb-4">
+          <Input
+            placeholder="Min Runtime (in minutes)"
+            value={minRuntime}
+            onChange={(e) => setMinRuntime(Number(e.target.value) || "")}
+          />
+          <Input
+            placeholder="Max Runtime (in minutes)"
+            value={maxRuntime}
+            onChange={(e) => setMaxRuntime(Number(e.target.value) || "")}
+          />
+          <Input
+            type="date"
+            placeholder="Start Date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <Input
+            type="date"
+            placeholder="End Date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <Input
+            placeholder="Filter by Director"
+            value={directorFilter}
+            onChange={(e) => setDirectorFilter(e.target.value)}
+          />
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="relevancy">Relevancy</option>
+            <option value="runtime">Runtime</option>
+            <option value="release_date">Release Date</option>
+          </select>
+          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+      )}
       <Table>
         <TableCaption>Movies</TableCaption>
         <TableHeader>
@@ -146,7 +236,7 @@ function App() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {results.map((movie) => (
+         {filteredAndSortedResults.map((movie) => (
             <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
               <TableCell>{movie.title}</TableCell>
               <TableCell>{movie.description}</TableCell>
@@ -163,6 +253,7 @@ function App() {
           ))}
         </TableBody>
       </Table>
+
 
       {selectedMovie && (
         <Dialog open onOpenChange={closeMovieCard}>
@@ -191,6 +282,13 @@ function App() {
               <div>
                 <h3 className="font-semibold text-xl">Dominant Topic</h3>
                 <p>{dominantTopics[selectedMovie.title]}</p>
+                <h3 className="font-semibold text-xl">Release Date</h3>
+                <p>{selectedMovie.release_date}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Run Time</h3>
+                <p>{selectedMovie.run_time}</p>
               </div>
 
               <div>
