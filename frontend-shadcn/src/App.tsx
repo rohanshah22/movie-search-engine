@@ -98,7 +98,7 @@ function App() {
   const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
   const [filtersCollapsed, setFiltersCollapsed] = useState(true);
   const [directorFilter, setDirectorFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [minRuntime, setMinRuntime] = useState<number | "">("");
   const [maxRuntime, setMaxRuntime] = useState<number | "">("");
   const [startDate, setStartDate] = useState("");
