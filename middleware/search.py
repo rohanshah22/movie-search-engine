@@ -8,6 +8,8 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from nltk.stem import PorterStemmer
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # ----- CONFIGURATION & GLOBALS -----
 INVERTED_INDEX_PATH = "inverted_index.json"
@@ -15,10 +17,21 @@ DATASET_PATH        = "filtered_output.csv"
 K = 3.0
 b = 0.5
 
+
+
 app = FastAPI(
     title="Movie Description Search",
     description="A simple BM25-style search over movie descriptions",
     version="1.0",
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can restrict this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 ps = PorterStemmer()
