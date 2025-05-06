@@ -104,18 +104,23 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortBy, setSortBy] = useState("relevancy");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+
 
   const toggleFilters = () => {
     setFiltersCollapsed(!filtersCollapsed);
   };
   const filteredAndSortedResults = results
     .filter((movie) => {
+      const movieTopic = dominantTopics[movie.title];
+      const topicCheck =
+        selectedTopics.length === 0 || selectedTopics.includes(movieTopic);
       // Filter by director
       const directorCheck =
         directorFilter === "" ||
         movie.director.toLowerCase().includes(directorFilter.toLowerCase());
 
-      // Existing runtime/date filters
+      // Runtime/date checks
       const runtimeCheck =
         (minRuntime === "" || movie.run_time >= minRuntime) &&
         (maxRuntime === "" || movie.run_time <= maxRuntime);
@@ -123,7 +128,9 @@ function App() {
         (startDate === "" || movie.release_date >= startDate) &&
         (endDate === "" || movie.release_date <= endDate);
 
-      return directorCheck && runtimeCheck && dateCheck;
+      
+
+      return directorCheck && runtimeCheck && dateCheck && topicCheck;
     })
     .sort((a, b) => {
       let valA, valB;
@@ -140,7 +147,14 @@ function App() {
       }
       return sortOrder === "asc" ? valA - valB : valB - valA;
     });
-
+    const toggleTopic = (topic: string) => {
+      setSelectedTopics((prevTopics) => {
+        if (prevTopics.includes(topic)) {
+          return prevTopics.filter((t) => t !== topic);
+        }
+        return [...prevTopics, topic];
+      });
+    };
   const handleSearch = async () => {
     console.log(relatedData);
     console.log("Searching for:", query);
@@ -185,44 +199,60 @@ function App() {
 
       </div>
       {!filtersCollapsed && (
-        <div className="flex flex-row space-x-2 mb-4">
-          <Input
-            placeholder="Min Runtime (in minutes)"
-            value={minRuntime}
-            onChange={(e) => setMinRuntime(Number(e.target.value) || "")}
-          />
-          <Input
-            placeholder="Max Runtime (in minutes)"
-            value={maxRuntime}
-            onChange={(e) => setMaxRuntime(Number(e.target.value) || "")}
-          />
-          <Input
-            type="date"
-            placeholder="Start Date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <Input
-            type="date"
-            placeholder="End Date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          <Input
-            placeholder="Filter by Director"
-            value={directorFilter}
-            onChange={(e) => setDirectorFilter(e.target.value)}
-          />
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="relevancy">Relevancy</option>
-            <option value="runtime">Runtime</option>
-            <option value="release_date">Release Date</option>
-          </select>
-          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </div>
+        <>
+          <div className="flex flex-row space-x-2 mb-4">
+            <Input
+              placeholder="Min Runtime (in minutes)"
+              value={minRuntime}
+              onChange={(e) => setMinRuntime(Number(e.target.value) || "")}
+            />
+            <Input
+              placeholder="Max Runtime (in minutes)"
+              value={maxRuntime}
+              onChange={(e) => setMaxRuntime(Number(e.target.value) || "")}
+            />
+            <Input
+              type="date"
+              placeholder="Start Date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <Input
+              type="date"
+              placeholder="End Date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <Input
+              placeholder="Filter by Director"
+              value={directorFilter}
+              onChange={(e) => setDirectorFilter(e.target.value)}
+            />
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="relevancy">Relevancy</option>
+              <option value="runtime">Runtime</option>
+              <option value="release_date">Release Date</option>
+            </select>
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+            
+          </div>
+          <div className="flex flex-wrap space-x-2 mb-4">
+            <label className="self-center font-medium">Filter by Topic:</label>
+            {Object.values(topic_labels).map((label) => (
+              <Button
+                key={label}
+                variant={selectedTopics.includes(label) ? "secondary" : "default"}
+                onClick={() => toggleTopic(label)}
+                className={`topic-button ${selectedTopics.includes(label) ? "toggled" : ""}`}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </>
       )}
       <Table>
         <TableCaption>Movies</TableCaption>
