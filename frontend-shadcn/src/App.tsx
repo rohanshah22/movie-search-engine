@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
-
 import {
   Table,
   TableBody,
@@ -13,35 +12,62 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import './App.css';
 
-function App() {
+type SearchResult = {
+  doc_id: number;
+  title: string;
+  score: number;
+  description: string;
+  release_date: string;
+  run_time: number;
+  cast: string[];
+  director: string;
+};
 
+function App() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
 
   const handleSearch = async () => {
-    console.log("Search query:", query);
-
+    console.log("Searching for:", query);
     try {
-      const response = await axios.post("http://localhost:8000/search", {
-        query: query,
+      const response = await fetch("http://localhost:8000/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
       });
-
-      console.log("Backend response:", response.data);
-      setResults(response.data); // Save results for table display
+      const data = await response.json();
+      console.log("Received data:", data);
+      setResults(data);
     } catch (error) {
-      console.error("Error fetching search results:", error);
+      console.error("Search failed:", error);
     }
   };
+
+  const openMovieCard = (movie: SearchResult) => {
+    setSelectedMovie(movie);
+  };
+
+  const closeMovieCard = () => {
+    setSelectedMovie(null);
+  };
+
   return (
     <div>
-      <div className="flex flex-row">
-        <Input 
+      <div className="flex flex-row mb-4">
+        <Input
           placeholder="Type your movie description here"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}/>
-        <Button onClick={handleSearch}>search</Button>
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <Button onClick={handleSearch}>Search</Button>
       </div>
       <Table>
         <TableCaption>Movies</TableCaption>
@@ -55,15 +81,55 @@ function App() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>Movie Name</TableCell>
-            <TableCell>Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary, Plot Summary</TableCell>
-            <TableCell>Director, Director</TableCell>
-            <TableCell>Cast, Cast, Cast, Cast, Cast</TableCell>
-            <TableCell>Movie, Movie, Movie, Movie, Movie</TableCell>
-          </TableRow>
+          {results.map((movie) => (
+            <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
+              <TableCell>{movie.title}</TableCell>
+              <TableCell>{movie.description}</TableCell>
+              <TableCell>{movie.director}</TableCell>
+              <TableCell>{movie.cast.join(", ")}</TableCell>
+              <TableCell>{results.filter((m) => m.doc_id !== movie.doc_id).slice(0, 2).map((m) => m.title).join(", ")}</TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
+
+      {selectedMovie && (
+        <Dialog open onOpenChange={closeMovieCard}>
+          <DialogContent className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-semibold mb-4">{selectedMovie.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-xl">Description</h3>
+                <p>{selectedMovie.description}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Director</h3>
+                <p>{selectedMovie.director}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Cast</h3>
+                <p>{selectedMovie.cast.join(", ")}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Related Movies</h3>
+                <ul>
+                  {results
+                    .filter((m) => m.doc_id !== selectedMovie.doc_id)
+                    .slice(0, 5)
+                    .map((m) => (
+                      <li key={m.doc_id} className="text-blue-500 hover:underline cursor-pointer">{m.title}</li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

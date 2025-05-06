@@ -10,7 +10,6 @@ from pydantic import BaseModel
 from nltk.stem import PorterStemmer
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # ----- CONFIGURATION & GLOBALS -----
 INVERTED_INDEX_PATH = "inverted_index.json"
 DATASET_PATH        = "filtered_output.csv"
