@@ -246,8 +246,9 @@ function App() {
                 key={label}
                 variant={selectedTopics.includes(label) ? "secondary" : "default"}
                 onClick={() => toggleTopic(label)}
-                className={`topic-button ${selectedTopics.includes(label) ? "toggled" : ""}`}
-              >
+                className={`px-4 py-2 rounded ${
+                  selectedTopics.includes(label) ? "bg-black text-white" : "bg-slate-50 text-black"
+                }`}              >
                 {label}
               </Button>
             ))}
