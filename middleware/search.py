@@ -210,5 +210,5 @@ def search(req: SearchRequest):
     accumulator = execute_search(qvec)
 
     # 3) pick top 5
-    results = get_top_n(accumulator, n=5)
+    results = get_top_n(accumulator, n=10)
     return results

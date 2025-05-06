@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import axios from "axios";
 import {
   Table,
   TableBody,
@@ -12,8 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import './App.css';
 
@@ -105,6 +103,9 @@ function App() {
 
   return (
     <div>
+          <h2 className="scroll-m-20 border-b pb-2 text-4xl font-semibold tracking-tight first:mt-0">
+      Mov Map
+        </h2>
       
       <div className="flex flex-row mb-4">
         <Input
@@ -169,15 +170,13 @@ function App() {
             <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
             <TableCell>{movie.title}</TableCell>
             <TableCell>{movie.description}</TableCell>
-            <TableCell>{movie.director}</TableCell>
-            <TableCell>{movie.cast}</TableCell>
-            <TableCell>
+            {/* <TableCell>
               {filteredAndSortedResults
                 .filter((m) => m.doc_id !== movie.doc_id)
                 .slice(0, 2)
                 .map((m) => m.title)
                 .join(", ")}
-            </TableCell>
+            </TableCell> */}
           </TableRow>
         ))}
       </TableBody>
@@ -203,6 +202,16 @@ function App() {
               <div>
                 <h3 className="font-semibold text-xl">Cast</h3>
                 <p>{selectedMovie.cast}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Release Date</h3>
+                <p>{selectedMovie.release_date}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Run Time</h3>
+                <p>{selectedMovie.run_time}</p>
               </div>
 
               <div>
