@@ -239,15 +239,13 @@ function App() {
             <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
               <TableCell>{movie.title}</TableCell>
               <TableCell>{movie.description}</TableCell>
-              <TableCell>{movie.director}</TableCell>
-              <TableCell>{movie.cast}</TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {results
                   .filter((m) => m.doc_id !== movie.doc_id)
                   .slice(0, 2)
                   .map((m) => m.title)
                   .join(", ")}
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>
@@ -281,9 +279,12 @@ function App() {
               <div>
                 <h3 className="font-semibold text-xl">Dominant Topic</h3>
                 <p>{dominantTopics[selectedMovie.title]}</p>
+                </div>
+              <div>
                 <h3 className="font-semibold text-xl">Release Date</h3>
                 <p>{selectedMovie.release_date}</p>
               </div>
+              
 
               <div>
                 <h3 className="font-semibold text-xl">Run Time</h3>
