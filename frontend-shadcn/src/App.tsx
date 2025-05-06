@@ -34,6 +34,19 @@ type SearchResult = {
 function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
+  const [directorFilter, setDirectorFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [minRuntime, setMinRuntime] = useState<number | "">("");
+  const [maxRuntime, setMaxRuntime] = useState<number | "">("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useState("relevancy");
+  // const moviePosterUrl =
+  //   "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg";
+
+  const [moviePosterUrl, setMoviePosterUrl] = useState<string | null>(null); // New state for the poster URL
 
   const topic_labels = {
     0: "Crime / Action",
@@ -52,10 +65,6 @@ function App() {
     Record<string, { title: string; score: number; index: number }[]>
   >({});
 
-  // const [topicData, setTopicData] = useState<
-  //   Record<string, { title: string; score: number; index: number }[]>
-  // >({});
-
   useEffect(() => {
     fetch("../middleware/related_movies.json")
       .then((res) => res.json())
@@ -71,8 +80,8 @@ function App() {
     fetch("../middleware/lda_topic_scores.json")
       .then((res) => res.json())
       .then((data) => {
-        const dominant: Record<string, string> = {}; // change the type here
-  
+        const dominant: Record<string, string> = {};
+
         for (const movie of data) {
           const scores = movie.topic_scores;
           const maxTopic = Object.entries(scores).reduce(
@@ -85,29 +94,19 @@ function App() {
             },
             { topic: -1, score: -Infinity }
           );
-          dominant[movie.title] = topic_labels[maxTopic.topic as keyof typeof topic_labels];
+          dominant[movie.title] =
+            topic_labels[maxTopic.topic as keyof typeof topic_labels];
         }
-  
+
         setDominantTopics(dominant);
       })
       .catch((err) => console.error("Failed to load topic scores", err));
   }, []);
-  
-
-
-  const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
-  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
-  const [directorFilter, setDirectorFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [minRuntime, setMinRuntime] = useState<number | "">("");
-  const [maxRuntime, setMaxRuntime] = useState<number | "">("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [sortBy, setSortBy] = useState("relevancy");
 
   const toggleFilters = () => {
     setFiltersCollapsed(!filtersCollapsed);
   };
+
   const filteredAndSortedResults = results
     .filter((movie) => {
       // Filter by director
@@ -142,8 +141,6 @@ function App() {
     });
 
   const handleSearch = async () => {
-    console.log(relatedData);
-    console.log("Searching for:", query);
     try {
       const response = await fetch("http://localhost:8000/search", {
         method: "POST",
@@ -153,8 +150,8 @@ function App() {
         body: JSON.stringify({ query }),
       });
       const data = await response.json();
-      console.log("Received data:", data);
       setResults(data);
+      console.log("Line 150");
     } catch (error) {
       console.error("Search failed:", error);
     }
@@ -162,18 +159,48 @@ function App() {
 
   const openMovieCard = (movie: SearchResult) => {
     setSelectedMovie(movie);
+    searchMovieURL();
+    console.log(moviePosterUrl);
+    // setMoviePosterUrl(null); // Clear the previous poster when opening a new movie card
   };
 
   const closeMovieCard = () => {
     setSelectedMovie(null);
+    // setMoviePosterUrl(null); // Clear the poster when closing the movie card
+  };
+
+  const searchMovieURL = async () => {
+    const apiKey =
+      "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxYzg3ZWRjZWIwZmJmZmJkM2NjYjA4YTViYmY5YWQwMyIsIm5iZiI6MS43NDYzOTIzNDE2MDMwMDAyZSs5LCJzdWIiOiI2ODE3ZDUxNTg2MGM1ZjQ5M2VkNGNiMjAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.48sraTg94Sy81HnSdhrqRgtCvt1k6XMbmWIwoX11eGI"; // Fetch movie data for "The Dark Knight"
+
+    try {
+      const response = await fetch(
+        "https://api.themoviedb.org/3/search/movie?include_adult=false&language=en-US&page=1&query=The+Dark+Knight",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      console.log("GOT IT");
+
+      const posterPath = data.results[0].poster_path;
+      const mV = `https://image.tmdb.org/t/p/w500${posterPath}`;
+      setMoviePosterUrl(mV);
+    } catch (error) {
+      console.error("Error fetching movie data:", error);
+    }
   };
 
   return (
     <div>
-          <h2 className="scroll-m-20 border-b pb-2 text-4xl font-semibold tracking-tight first:mt-0">
-      Mov Map
-        </h2>
-      
+      <h2 className="scroll-m-20 border-b pb-2 text-4xl font-semibold tracking-tight first:mt-0">
+        Mov Map
+      </h2>
+
       <div className="flex flex-row mb-4">
         <Input
           placeholder="Type your movie description here"
@@ -182,8 +209,8 @@ function App() {
         />
         <Button onClick={handleSearch}>Search</Button>
         <Button onClick={toggleFilters}>Filters</Button>
-
       </div>
+
       {!filtersCollapsed && (
         <div className="flex flex-row space-x-2 mb-4">
           <Input
@@ -218,12 +245,16 @@ function App() {
             <option value="runtime">Runtime</option>
             <option value="release_date">Release Date</option>
           </select>
-          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+          >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
         </div>
       )}
+
       <Table>
         <TableCaption>Movies</TableCaption>
         <TableHeader>
@@ -233,74 +264,65 @@ function App() {
           </TableRow>
         </TableHeader>
         <TableBody>
-         {filteredAndSortedResults.map((movie) => (
+          {filteredAndSortedResults.map((movie) => (
             <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
               <TableCell>{movie.title}</TableCell>
               <TableCell>{movie.description}</TableCell>
-              {/* <TableCell>
-                {results
-                  .filter((m) => m.doc_id !== movie.doc_id)
-                  .slice(0, 2)
-                  .map((m) => m.title)
-                  .join(", ")}
-              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-
       {selectedMovie && (
         <Dialog open onOpenChange={closeMovieCard}>
-          <DialogContent className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto mx-auto bg-white rounded-lg shadow-lg p-6">
             <DialogHeader>
-              <DialogTitle className="text-3xl font-semibold mb-4">
+              <DialogTitle className="text-3xl font-semibold mb-6">
                 {selectedMovie.title}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-xl">Description</h3>
-                <p>{selectedMovie.description}</p>
-              </div>
 
-              <div>
-                <h3 className="font-semibold text-xl">Director</h3>
-                <p>{selectedMovie.director}</p>
-              </div>
+            <div className="flex flex-row space-x-6">
+              {moviePosterUrl && (
+                <img
+                  src={moviePosterUrl}
+                  alt="Movie poster"
+                  className="w-48 max-w-xs max-h-[400px] rounded-lg object-contain"
+                />
+              )}
 
-              <div>
-                <h3 className="font-semibold text-xl">Cast</h3>
-                <p>{selectedMovie.cast}</p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-xl">Dominant Topic</h3>
-                <p>{dominantTopics[selectedMovie.title]}</p>
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-xl">Description</h3>
+                  <p>{selectedMovie.description}</p>
                 </div>
-              <div>
-                <h3 className="font-semibold text-xl">Release Date</h3>
-                <p>{selectedMovie.release_date}</p>
-              </div>
-              
 
-              <div>
-                <h3 className="font-semibold text-xl">Run Time</h3>
-                <p>{selectedMovie.run_time}</p>
-              </div>
+                <div>
+                  <h3 className="font-semibold text-xl">Director</h3>
+                  <p>{selectedMovie.director}</p>
+                </div>
 
-              <div>
-                <h3 className="font-semibold text-xl">Related Movies</h3>
-                <ul>
-                  {relatedData[selectedMovie.title]?.map((rel) => (
-                    <li
-                      key={rel.index}
-                      className="text-blue-500 hover:underline cursor-pointer"
-                    >
-                      {rel.title}
-                    </li>
-                  )) ?? <li>No related movies found.</li>}
-                </ul>
+                <div>
+                  <h3 className="font-semibold text-xl">Cast</h3>
+                  <p>{selectedMovie.cast}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-xl">Dominant Topic</h3>
+                  <p>{dominantTopics[selectedMovie.title]}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-xl">Release Date</h3>
+                  <p>{selectedMovie.release_date}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-xl">Runtime</h3>
+                  <p>{selectedMovie.run_time} minutes</p>
+                </div>
+
+                <Button onClick={closeMovieCard}>Close</Button>
               </div>
             </div>
           </DialogContent>
