@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,9 +11,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import './App.css';
+import "./App.css";
 
 type SearchResult = {
   doc_id: number;
@@ -29,6 +37,67 @@ type SearchResult = {
 function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+
+  const topic_labels = {
+    0: "Crime / Action",
+    1: "Family / Drama",
+    2: "Military / War",
+    3: "Western / Outlaw",
+    4: "School / Sports",
+    5: "Domestic / Thriller",
+    6: "Adventure / Survival",
+    7: "Sci-Fi / Horror",
+    8: "Meta / Art Film",
+    9: "Chase / Comedy",
+  };
+
+  const [relatedData, setRelatedData] = useState<
+    Record<string, { title: string; score: number; index: number }[]>
+  >({});
+
+  // const [topicData, setTopicData] = useState<
+  //   Record<string, { title: string; score: number; index: number }[]>
+  // >({});
+
+  useEffect(() => {
+    fetch("../middleware/related_movies.json")
+      .then((res) => res.json())
+      .then((data) => setRelatedData(data))
+      .catch((err) => console.error("Failed to load related movies", err));
+  }, []);
+
+  const [dominantTopics, setDominantTopics] = useState<Record<string, string>>(
+    {}
+  );
+
+  useEffect(() => {
+    fetch("../middleware/lda_topic_scores.json")
+      .then((res) => res.json())
+      .then((data) => {
+        const dominant: Record<string, string> = {}; // change the type here
+  
+        for (const movie of data) {
+          const scores = movie.topic_scores;
+          const maxTopic = Object.entries(scores).reduce(
+            (max, [topic, score]) => {
+              const numScore =
+                typeof score === "number" ? score : parseFloat(score as string);
+              return numScore > max.score
+                ? { topic: parseInt(topic), score: numScore }
+                : max;
+            },
+            { topic: -1, score: -Infinity }
+          );
+          dominant[movie.title] = topic_labels[maxTopic.topic as keyof typeof topic_labels];
+        }
+  
+        setDominantTopics(dominant);
+      })
+      .catch((err) => console.error("Failed to load topic scores", err));
+  }, []);
+  
+
+
   const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
   const [filtersCollapsed, setFiltersCollapsed] = useState(true);
   const [directorFilter, setDirectorFilter] = useState("");
@@ -76,6 +145,7 @@ function App() {
     });
 
   const handleSearch = async () => {
+    console.log(relatedData);
     console.log("Searching for:", query);
     try {
       const response = await fetch("http://localhost:8000/search", {
@@ -168,25 +238,30 @@ function App() {
         <TableBody>
          {filteredAndSortedResults.map((movie) => (
             <TableRow key={movie.doc_id} onClick={() => openMovieCard(movie)}>
-            <TableCell>{movie.title}</TableCell>
-            <TableCell>{movie.description}</TableCell>
-            {/* <TableCell>
-              {filteredAndSortedResults
-                .filter((m) => m.doc_id !== movie.doc_id)
-                .slice(0, 2)
-                .map((m) => m.title)
-                .join(", ")}
-            </TableCell> */}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+              <TableCell>{movie.title}</TableCell>
+              <TableCell>{movie.description}</TableCell>
+              <TableCell>{movie.director}</TableCell>
+              <TableCell>{movie.cast}</TableCell>
+              <TableCell>
+                {results
+                  .filter((m) => m.doc_id !== movie.doc_id)
+                  .slice(0, 2)
+                  .map((m) => m.title)
+                  .join(", ")}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
 
       {selectedMovie && (
         <Dialog open onOpenChange={closeMovieCard}>
           <DialogContent className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
             <DialogHeader>
-              <DialogTitle className="text-3xl font-semibold mb-4">{selectedMovie.title}</DialogTitle>
+              <DialogTitle className="text-3xl font-semibold mb-4">
+                {selectedMovie.title}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -205,6 +280,8 @@ function App() {
               </div>
 
               <div>
+                <h3 className="font-semibold text-xl">Dominant Topic</h3>
+                <p>{dominantTopics[selectedMovie.title]}</p>
                 <h3 className="font-semibold text-xl">Release Date</h3>
                 <p>{selectedMovie.release_date}</p>
               </div>
@@ -217,12 +294,14 @@ function App() {
               <div>
                 <h3 className="font-semibold text-xl">Related Movies</h3>
                 <ul>
-                  {results
-                    .filter((m) => m.doc_id !== selectedMovie.doc_id)
-                    .slice(0, 5)
-                    .map((m) => (
-                      <li key={m.doc_id} className="text-blue-500 hover:underline cursor-pointer">{m.title}</li>
-                    ))}
+                  {relatedData[selectedMovie.title]?.map((rel) => (
+                    <li
+                      key={rel.index}
+                      className="text-blue-500 hover:underline cursor-pointer"
+                    >
+                      {rel.title}
+                    </li>
+                  )) ?? <li>No related movies found.</li>}
                 </ul>
               </div>
             </div>
