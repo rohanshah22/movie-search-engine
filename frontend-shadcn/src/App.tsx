@@ -59,6 +59,9 @@ function App() {
 
   return (
     <div>
+          <h2 className="scroll-m-20 border-b pb-2 text-4xl font-semibold tracking-tight first:mt-0">
+      Mov Map
+        </h2>
       <div className="flex flex-row mb-4">
         <Input
           placeholder="Type your movie description here"
