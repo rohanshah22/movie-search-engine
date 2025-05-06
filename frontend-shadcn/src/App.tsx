@@ -73,11 +73,8 @@ function App() {
         <TableCaption>Movies</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Movie Name</TableHead>
-            <TableHead>Summary</TableHead>
-            <TableHead>Director</TableHead>
-            <TableHead>Cast</TableHead>
-            <TableHead>Related Movies</TableHead>
+            <TableHead className="text-center">Movie Name</TableHead>
+            <TableHead className="text-center">Summary</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
