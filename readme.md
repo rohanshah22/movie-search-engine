@@ -1,13 +1,10 @@
-***Dependencies:**
+**Dependencies:**
+
+node v22.15.3
 
 pip install fastapi uvicorn pandas nltk
 
-pip install fastapi uvicorn
-
-pip install fastapi[all]
-
-
-***Running Backend:***
+**Starting up Backend:**
 
 backend commands from /movie-search-engine
 
@@ -17,7 +14,7 @@ uvicorn search:app --reload
 
 API interaction page at localhost:8000/docs
 
-***frontend:***
+**Starting up frontend:**
 
 cd frontend-shadcn
 
