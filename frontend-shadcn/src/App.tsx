@@ -83,7 +83,7 @@ function App() {
               <TableCell>{movie.title}</TableCell>
               <TableCell>{movie.description}</TableCell>
               <TableCell>{movie.director}</TableCell>
-              <TableCell>{movie.cast.join(", ")}</TableCell>
+              <TableCell>{movie.cast}</TableCell>
               <TableCell>{results.filter((m) => m.doc_id !== movie.doc_id).slice(0, 2).map((m) => m.title).join(", ")}</TableCell>
             </TableRow>
           ))}
@@ -109,7 +109,7 @@ function App() {
 
               <div>
                 <h3 className="font-semibold text-xl">Cast</h3>
-                <p>{selectedMovie.cast.join(", ")}</p>
+                <p>{selectedMovie.cast}</p>
               </div>
 
               <div>
