@@ -38,9 +38,26 @@ function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
 
+  const topic_labels = {
+    0: "Crime / Action",
+    1: "Family / Drama",
+    2: "Military / War",
+    3: "Western / Outlaw",
+    4: "School / Sports",
+    5: "Domestic / Thriller",
+    6: "Adventure / Survival",
+    7: "Sci-Fi / Horror",
+    8: "Meta / Art Film",
+    9: "Chase / Comedy",
+  };
+
   const [relatedData, setRelatedData] = useState<
     Record<string, { title: string; score: number; index: number }[]>
   >({});
+
+  // const [topicData, setTopicData] = useState<
+  //   Record<string, { title: string; score: number; index: number }[]>
+  // >({});
 
   useEffect(() => {
     fetch("../middleware/related_movies.json")
@@ -48,6 +65,39 @@ function App() {
       .then((data) => setRelatedData(data))
       .catch((err) => console.error("Failed to load related movies", err));
   }, []);
+
+  const [dominantTopics, setDominantTopics] = useState<Record<string, string>>(
+    {}
+  );
+
+  useEffect(() => {
+    fetch("../middleware/lda_topic_scores.json")
+      .then((res) => res.json())
+      .then((data) => {
+        const dominant: Record<string, string> = {}; // change the type here
+  
+        for (const movie of data) {
+          const scores = movie.topic_scores;
+          const maxTopic = Object.entries(scores).reduce(
+            (max, [topic, score]) => {
+              const numScore =
+                typeof score === "number" ? score : parseFloat(score as string);
+              return numScore > max.score
+                ? { topic: parseInt(topic), score: numScore }
+                : max;
+            },
+            { topic: -1, score: -Infinity }
+          );
+          dominant[movie.title] = topic_labels[maxTopic.topic as keyof typeof topic_labels];
+        }
+  
+        setDominantTopics(dominant);
+      })
+      .catch((err) => console.error("Failed to load topic scores", err));
+  }, []);
+  
+
+
   const [selectedMovie, setSelectedMovie] = useState<SearchResult | null>(null);
 
   const handleSearch = async () => {
@@ -136,6 +186,11 @@ function App() {
               <div>
                 <h3 className="font-semibold text-xl">Cast</h3>
                 <p>{selectedMovie.cast}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-xl">Dominant Topic</h3>
+                <p>{dominantTopics[selectedMovie.title]}</p>
               </div>
 
               <div>
