@@ -12,7 +12,7 @@ API interaction page at localhost:8000/docs
 
 **Starting up frontend:**
 
-backend commands from /movie-search-engine
+frontend commands from /movie-search-engine
 
 Uses Node 22.15.3
 
